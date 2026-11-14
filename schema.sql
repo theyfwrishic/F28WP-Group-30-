@@ -1,0 +1,35 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(60) NOT NULL,
+  username VARCHAR(30) NOT NULL UNIQUE,
+  pass_hash VARCHAR(200) NOT NULL,
+  role ENUM('customer','owner','admin') NOT NULL DEFAULT 'customer'
+);
+CREATE TABLE IF NOT EXISTS restaurants (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  owner_id INT NULL,
+  name VARCHAR(80) NOT NULL,
+  cuisine VARCHAR(40) NOT NULL,
+  location VARCHAR(40) NOT NULL,
+  price TINYINT NOT NULL DEFAULT 1,
+  description VARCHAR(300) NOT NULL DEFAULT '',
+  FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL
+);
+CREATE TABLE IF NOT EXISTS dishes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  restaurant_id INT NOT NULL,
+  name VARCHAR(60) NOT NULL,
+  price DECIMAL(8,2) NOT NULL DEFAULT 0,
+  description VARCHAR(120) NOT NULL DEFAULT '',
+  FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS reviews (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  restaurant_id INT NOT NULL,
+  user_id INT NOT NULL,
+  stars TINYINT NOT NULL,
+  text VARCHAR(500) NOT NULL,
+  UNIQUE KEY one_review_per_user (restaurant_id, user_id),
+  FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

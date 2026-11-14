@@ -1,0 +1,17 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Food Advisor Owner</title><link rel="stylesheet" href="/shared.css"></head><body><header id="nav"></header><main id="app"></main><div id="toast" role="status"></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script><script src="/shared.js"></script><script>
+const {esc,stars}=FA;let cur=0;
+FA.start('owner','Owner',render);
+function render(){FA.api('GET','/mine').done(L=>{
+ if(!L.length)return $('#app').html('<h1>My restaurants</h1><p class="mu">No restaurants are assigned to your account yet. Ask an admin to add one.</p>');
+ if(!L.find(x=>x.id==cur))cur=L[0].id;
+ FA.api('GET','/restaurants/'+cur).done(r=>{
+  $('#app').html(`<h1>My restaurants</h1><div class="row">${L.map(x=>`<button class="pick ${x.id==cur?'':'ghost'}" data-id="${x.id}">${esc(x.name)}</button>`).join('')}</div>
+  <h3>Restaurant details</h3><form class="card wide" id="ef">${FA.fields(r)}<p><button>Save details</button></p></form>
+  <h3>Dishes</h3><div class="grid">${r.dishes.map(d=>`<div class="card"><b>${esc(d.n)}</b> <span class="mu">AED ${esc(d.p)}</span><p class="mu">${esc(d.d)}</p><button class="del rm" data-i="${d.id}">Remove</button></div>`).join('')}</div>
+  <form class="card form" id="df" style="margin-top:14px"><b>Add a dish</b><label>Name</label><input name="n" required><label>Price (AED)</label><input name="p" type="number" min="0" required><label>Description</label><input name="d"><p><button>Add dish</button></p></form>
+  <h3>Customer reviews (${r.reviews.length})</h3>${r.reviews.map(x=>`<div class="rev"><b>${esc(x.author)}</b> <span class="st">${stars(x.stars)}</span><div>${esc(x.text)}</div></div>`).join('')||'<p class="mu">No reviews yet.</p>'}`);
+  $('#ef').submit(e=>{e.preventDefault();FA.api('PUT','/restaurants/'+cur,FA.form(e.target)).done(()=>{FA.toast('Details saved');render()})});
+  $('#df').submit(e=>{e.preventDefault();FA.api('POST','/restaurants/'+cur+'/dishes',FA.form(e.target)).done(()=>{FA.toast('Dish added');render()})});
+ })})}
+$(document).on('click','.pick',function(){cur=$(this).data('id');render()}).on('click','.rm',function(){FA.api('DELETE','/restaurants/'+cur+'/dishes/'+$(this).data('i')).done(()=>{FA.toast('Dish removed');render()})});
+</script></body></html>
